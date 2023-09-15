@@ -100,7 +100,7 @@ class Interpreter:
     username = getpass.getuser()
     current_working_directory = os.getcwd()
     operating_system = platform.system()
-    
+
     info += f"\n\n[User Info]\nName: {username}\nCWD: {current_working_directory}\nOS: {operating_system}"
 
     if not self.local:
@@ -112,14 +112,13 @@ class Interpreter:
       query = str(self.messages[-2:])
       query = urllib.parse.quote(query)
       query = query[-2000:]
-      
+
       # Use them to query Open Procedures
       url = f"https://open-procedures.replit.app/search/?query={query}"
       relevant_procedures = requests.get(url).json()["procedures"]
       info += "\n\n# Recommended Procedures\n" + "\n---\n".join(relevant_procedures) + "\nIn your plan, include steps and, if present, **EXACT CODE SNIPPETS** (especially for depracation notices, **WRITE THEM INTO YOUR PLAN -- underneath each numbered step** as they will VANISH once you execute your first line of code, so WRITE THEM DOWN NOW if you need them) from the above procedures if they are relevant to the task. Again, include **VERBATIM CODE SNIPPETS** from the procedures above if they are relevent to the task **directly in your plan.**"
 
-    elif self.local:
-
+    else:
       # Tell Code-Llama how to run code.
       info += "\n\nTo run Python code, simply write a fenced Python code block (i.e ```python) in markdown. When you close it with ```, it will be run. You'll then be given its output."
 
@@ -142,18 +141,18 @@ class Interpreter:
     # ^ verify_api_key may set self.local to True, so we run this as an 'if', not 'elif':
     if self.local:
       # Code-Llama
-      if self.llama_instance == None:
+      if self.llama_instance is None:
         
         # Find or install Code-Llama
         self.llama_instance = get_llama_2_instance()
 
         # If the user decided not to download it, exit gracefully
-        if self.llama_instance == None:
-          raise KeyboardInterrupt
+      if self.llama_instance is None:
+        raise KeyboardInterrupt
 
     # Display welcome message
     welcome_message = ""
-    
+
     if self.debug_mode:
       welcome_message += "> Entered debug mode"
 
@@ -164,14 +163,14 @@ class Interpreter:
 
     if self.local:
       welcome_message += f"\n> Model set to `Code-Llama`"
-    
+
     # If not auto_run, tell the user we'll ask permission to run code
     # We also tell them here how to exit Open Interpreter
     if not self.auto_run:
       welcome_message += "\n\n" + confirm_mode_message
 
     welcome_message = welcome_message.strip()
-      
+
     # Print welcome message with newlines on either side (aesthetic choice)
     # unless we're starting with a blockquote (aesthetic choice)
     if welcome_message != "":
@@ -185,7 +184,7 @@ class Interpreter:
       # If it was, we respond non-interactivley
       self.messages.append({"role": "user", "content": message})
       self.respond()
-      
+
     else:
       # If it wasn't, we start an interactive chat
       while True:
@@ -196,11 +195,11 @@ class Interpreter:
         except KeyboardInterrupt:
           print()  # Aesthetic choice
           break
-  
+
         # Use `readline` to let users up-arrow to previous user messages,
         # which is a common behavior in terminals.
         readline.add_history(user_input)
-  
+
         # Add the user message to self.messages
         self.messages.append({"role": "user", "content": user_input})
 
@@ -210,7 +209,7 @@ class Interpreter:
             print(self.messages)
             self.debug_mode = True
             continue
-  
+
         # Respond, but gracefully handle CTRL-C / KeyboardInterrupt
         try:
           self.respond()
@@ -228,8 +227,7 @@ class Interpreter:
     Makes sure we have an OPENAI_API_KEY.
     """
 
-    if self.api_key == None:
-
+    if self.api_key is None:
       if 'OPENAI_API_KEY' in os.environ:
         self.api_key = os.environ['OPENAI_API_KEY']
       else:
@@ -241,16 +239,16 @@ class Interpreter:
 
         print(Markdown(missing_api_key_message), '', Rule(style="white"), '')
         response = input("OpenAI API key: ")
-    
+
         if response == "":
             # User pressed `enter`, requesting Code-Llama
             self.local = True
-            
+
             print(Markdown("> Switching to `Code-Llama`...\n\n**Tip:** Run `interpreter --local` to automatically use `Code-Llama`."), '')
             time.sleep(2)
             print(Rule(style="white"))
             return
-          
+
         else:
             self.api_key = response
             print(Markdown("> Model set to `GPT-4`"))
@@ -258,7 +256,7 @@ class Interpreter:
             print('', Markdown("**Tip:** To save this key for later, run `export OPENAI_API_KEY=your_api_key` on Mac/Linux or `setx OPENAI_API_KEY your_api_key` on Windows."), '')
             time.sleep(2)
             print(Rule(style="white"))
-            
+
     openai.api_key = self.api_key
 
   def end_active_block(self):
